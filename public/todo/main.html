@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>메인 페이지</title>
+    </head>
+    <body>
+        <table>
+            <tr>
+                <td><button id="day">오늘</button></td>
+                <td><button id="week">일주일</button></td>
+                <td><button id="month">한달</button></td>
+                <td><button id="init">갱신</button></td>
+                <td><button onclick="location.href='./post.html'">추가</button></td>
+            </tr>
+        </table>
+        <table>
+            <thead>
+                <th>시간</th>
+                <th>해야할 일</th>
+            </thead>
+            <tbody id="todo-list">
+
+            </tbody>
+        </table>
+    </body>
+    <script>
+        const bday = document.getElementById('day')
+        const bweek = document.getElementById('week')
+        const bmonth = document.getElementById('month')
+        const binit = document.getElementById('init')
+        const badd = document.getElementById('add')
+
+        binit.addEventListener('click', ()=>{
+            console.log('init button 클릭 됨')
+            init_todo()
+        })
+
+        bday.addEventListener('click', ()=>{
+            console.log('day button 클릭 됨')
+            search_todo(1)
+        })
+
+        bweek.addEventListener('click', ()=>{
+            console.log('week button 클릭 됨')
+            search_todo(7)
+        })
+
+        bmonth.addEventListener('click', ()=>{
+            console.log('month button 클릭 됨')
+            search_todo(30)
+        })
+
+        const init_todo = ()=>{
+            fetch('/init_todo', {
+                method:"post",
+                headers:{
+                    'content-type':'application/json'
+                }
+            }).then((res)=>res.json())
+            .then((data)=>{
+                const todo = document.getElementById('todo-list')
+                todo.innerHTML = ''
+                data['data'].forEach((item)=>{
+                    const row = document.createElement('tr')
+                    const dateCell = document.createElement('td')
+                    const taskCell = document.createElement('td')
+                    const checkCell = document.createElement('button')
+
+                    dateCell.textContent = item[0]
+                    taskCell.textContent = item[1]
+                    console.log(item)
+                    
+                    checkCell.setAttribute('name', item[2])
+                    checkCell.setAttribute('value', '삭제하기')
+
+                    checkCell.addEventListener('click', ()=>{
+                        remove_todo(item[2])
+                    })
+
+                    row.appendChild(dateCell)
+                    row.appendChild(taskCell)
+                    row.appendChild(checkCell)
+                    todo.appendChild(row)
+                })
+            })
+        }
+
+    const search_todo = (trg)=>{
+        fetch('/search_todo', {
+            method:"post",
+            headers:{
+                'content-type':'application/json'
+            },
+            body:JSON.stringify({
+                'trg':trg
+            })
+        }).then((res)=>res.json())
+            .then((data)=>{
+                const todo = document.getElementById('todo-list')
+                todo.innerHTML = ''
+
+                console.log(data)
+                
+                data['data'].forEach((val)=>{
+                    const row = document.createElement('tr')
+                    const dateCell = document.createElement('td')
+                    const taskCell = document.createElement('td')
+                    const checkCell = document.createElement('button')
+
+                    dateCell.textContent = val[0]
+                    taskCell.textContent = val[1]
+
+                    checkCell.setAttribute('name', val[2])
+                    checkCell.setAttribute('value', '삭제하기')
+
+                    checkCell.addEventListener('click', ()=>{
+                        remove_todo(val[2])
+                    })
+
+                    row.appendChild(dateCell)
+                    row.appendChild(taskCell)
+                    row.appendChild(checkCell)
+                    todo.appendChild(row)
+                })
+            })
+    }
+
+    const remove_todo = (rid)=>{
+        fetch('/remove_todo', {
+            method:"post",
+            headers:{
+                'content-type':'application/json'
+            },
+            body:JSON.stringify({
+                'rid':rid
+            })
+        }).then(init_todo())
+    }
+
+    window.addEventListener('load', ()=>{
+        init_todo()
+    })
+    </script>
+</html>
